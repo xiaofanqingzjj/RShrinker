@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- GifView用到属性和样式 -->
+<resources>
+    <declare-styleable name="MyTextView">
+        <attr name="mtv_text_color" format="color" />
+
+
+
+    </declare-styleable>
+</resources>

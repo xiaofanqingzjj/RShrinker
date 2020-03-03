@@ -1,0 +1,44 @@
+import net.yrom.tools.my.TestBuildSrc
+
+buildscript {
+
+    ext.kotlin_version = '1.2.31'
+    ext {
+        enableShrinker = true//project.hasProperty('ENABLE_SHRINKER')
+    }
+    repositories {
+        mavenLocal()
+        google()
+        jcenter()
+        maven { url 'https://jitpack.io' }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.0.0'
+        classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.2'
+
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+//        if (enableShrinker) classpath 'net.yrom:shrinker:0.2.7'
+    }
+}
+
+
+TestBuildSrc.test()
+
+ext {
+    IS_JITPACK = 'true' == System.env.JITPACK
+}
+
+allprojects {
+    repositories {
+        if (IS_JITPACK) {
+            jcenter()
+        } else {
+            maven {url 'http://maven.aliyun.com/nexus/content/repositories/jcenter/'}
+        }
+        google()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

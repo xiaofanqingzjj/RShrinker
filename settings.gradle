@@ -1,0 +1,5 @@
+include ':test', ':TestAcm'
+
+//include ':shrinker'
+
+//include ':buildSrc'

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- GifView用到属性和样式 -->
+<resources>
+    <declare-styleable name="SuperImageView">
+        <attr name="siv_corner_radius" format="dimension" />
+
+
+        <attr name="siv_corner_radius_top_left" format="dimension" />
+        <attr name="siv_corner_radius_top_right" format="dimension" />
+        <attr name="siv_corner_radius_bottom_left" format="dimension" />
+        <attr name="siv_corner_radius_bottom_right" format="dimension" />
+
+        <attr name="siv_border_color" format="color|reference" />
+        <attr name="siv_border_width" format="dimension|reference" />
+
+        <attr name="siv_scaleType">
+            <enum name="topLeft" value="0" />
+            <enum name="centerLeft" value="1" />
+            <enum name="bottomLeft" value="2" />
+            <enum name="topRight" value="3" />
+            <enum name="centerRight" value="4" />
+            <enum name="bottomRight" value="5" />
+            <enum name="centerTop" value="6" />
+            <enum name="centerBottom" value="7" />
+
+            <enum name="fit_top_left" value="8" />
+            <enum name="fit_top_center" value="9" />
+            <enum name="fit_top_right" value="10" />
+
+            <enum name="fit_bottom_left" value="11" />
+            <enum name="fit_bottom_center" value="12" />
+            <enum name="fit_bottom_right" value="13" />
+
+
+            <!--            FIT_TOP_LEFT(8),-->
+            <!--            FIT_TOP_CENTER(9),-->
+            <!--            FIT_TOP_RIGHT(10),-->
+
+            <!--            FIT_BOTTOM_LEFT(11),-->
+            <!--            FIT_BOTTOM_CENTER(12),-->
+            <!--            FIT_BOTTOM_RIGHT(13);-->
+
+
+        </attr>
+
+        <attr name="siv_circle" format="boolean" />
+    </declare-styleable>
+</resources>
