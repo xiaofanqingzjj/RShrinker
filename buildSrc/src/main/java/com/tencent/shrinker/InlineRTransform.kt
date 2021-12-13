@@ -10,7 +10,7 @@ import java.io.IOException
 import java.io.UncheckedIOException
 
 /**
- *
+ * 一只转换器，把class经过处理后，返回给构建系统
  *
  */
 class InlineRTransform(private val config: ShrinkerConfig) : Transform() {
@@ -92,9 +92,9 @@ class InlineRTransform(private val config: ShrinkerConfig) : Transform() {
 
         println("start transform")
 
+        // transform的输入
         val inputs = transformInvocation.inputs
         val outputProvider = transformInvocation.outputProvider
-
 
         println("inputs:$inputs")
 
@@ -131,6 +131,7 @@ class InlineRTransform(private val config: ShrinkerConfig) : Transform() {
 
     private fun inline(rSymbols: RSymbols, inputs: Collection<TransformInput>, outputProvider: TransformOutputProvider) {
 
+        // JarInput & DirInput拉平
         val inputStreams = inputs.flatMap {
             mutableListOf<QualifiedContent>().apply {
                 addAll(it.jarInputs)
@@ -139,6 +140,7 @@ class InlineRTransform(private val config: ShrinkerConfig) : Transform() {
         }.parallelStream()
 
         inputStreams.forEach {input->
+
 
             val src = input.file.toPath()
             val dst = getTargetPath(input, outputProvider).toPath()

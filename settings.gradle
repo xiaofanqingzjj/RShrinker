@@ -1,4 +1,4 @@
-include ':test', ':TestAcm'
+include ':test', ':TestAsm'
 
 //include ':shrinker'
 

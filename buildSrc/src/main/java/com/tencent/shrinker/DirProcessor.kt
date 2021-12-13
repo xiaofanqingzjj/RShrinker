@@ -18,7 +18,9 @@ object DirProcessor {
         path -> Files.isDirectory(path) || Files.isRegularFile(path) && !CASE_R_FILE.matches(path.getFileName())
     }
 
-
+    /**
+     *
+     */
     fun proceed(symbols: RSymbols, src: Path, dst: Path) {
         val files = resolveSources(src)
 
@@ -29,14 +31,19 @@ object DirProcessor {
         }
     }
 
+
     private fun proceedFile(symbols: RSymbols, source: Path, dst: Path) {
+
         val name = source.fileName.toString()
+
         val target = dst.resolve(name)
 
         if (Files.isDirectory(source)) {
             proceed(symbols, source, target)
         } else if (Files.isRegularFile(source)) {
             try {
+
+                // 创建目标文件
                 if (Files.notExists(dst)) {
                     Files.createDirectories(dst)
                 }

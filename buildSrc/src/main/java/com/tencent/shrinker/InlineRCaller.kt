@@ -37,7 +37,12 @@ import org.objectweb.asm.ClassReader.SKIP_FRAMES
  */
 object InlineRCaller {
 
-
+    /**
+     * 如果类中用到类R.xxx.xx常量，则替换常量的读取，直接从符号表中的值替换
+     * @param rSymbols R文件的符号名和常量表
+     * @param origin  原始字节码
+     * @return 返回修改后的字节码
+     */
     fun inlineRCaller(rSymbols: RSymbols, origin: ByteArray): ByteArray {
 
         // 使用ClassReader解析类
@@ -74,8 +79,10 @@ object InlineRCaller {
     }
 
 
-
-
+    /**
+     *
+     *
+     */
     private class PredicateClassVisitor : ClassVisitor(Opcodes.ASM5) {
         var isAttemptToVisitR: Boolean = false
             private set
@@ -113,8 +120,8 @@ object InlineRCaller {
 
 
     /**
-     * @author yrom
-     * @version 2017/11/29
+     *
+     *
      */
     private class ShrinkRClassVisitor(cv: ClassWriter, private val rSymbols: RSymbols) : ClassVisitor(Opcodes.ASM5, cv) {
 
@@ -144,7 +151,15 @@ object InlineRCaller {
 
             return object : MethodVisitor(Opcodes.ASM5, super.visitMethod(access, name, desc, signature, exceptions)) {
 
+
+                /**
+                 * 访问类的变量的指令
+                 * @param opcode 指令
+                 * @param owner 字段所属的类
+                 * @param fieldName 字段名
+                 */
                 override fun visitFieldInsn(opcode: Int, owner: String?, fieldName: String?, fieldDesc: String?) {
+
 
                     // 如果指令不是获取静态变量的指令直接跳过
                     if (opcode != Opcodes.GETSTATIC || owner?.startsWith("java/lang/") == true) {
@@ -157,7 +172,7 @@ object InlineRCaller {
                     val typeName = owner?.substring(owner.lastIndexOf('/') + 1)
                     val key = "$typeName.$fieldName"
 
-                    if (rSymbols.containsKey(key)) {
+                    if (rSymbols.containsKey(key)) { // 如果在符号表中，则替换成数字
                         // 在符号表中找对应的值
                         val value = rSymbols[key]
                                 ?: throw UnsupportedOperationException("value of $key is null!")

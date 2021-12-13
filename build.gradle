@@ -1,4 +1,4 @@
-import net.yrom.tools.my.TestBuildSrc
+//import net.yrom.tools.my.TestBuildSrc
 
 buildscript {
 
@@ -14,6 +14,8 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.0.0'
+
+
         classpath 'com.getkeepsafe.dexcount:dexcount-gradle-plugin:0.8.2'
 
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
@@ -22,7 +24,7 @@ buildscript {
 }
 
 
-TestBuildSrc.test()
+//TestBuildSrc.test()
 
 ext {
     IS_JITPACK = 'true' == System.env.JITPACK

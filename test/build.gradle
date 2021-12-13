@@ -1,12 +1,17 @@
 
+import com.tencent.shrinker.ShrinkerPlugin
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
+apply plugin: ShrinkerPlugin
 
-if (enableShrinker) {
-    apply plugin: 'net.yrom.shrinker'
-}
+
+
+//if (enableShrinker) {
+//    apply plugin: 'net.yrom.shrinker'
+//}
 
 android {
     compileSdkVersion 26
@@ -36,6 +41,9 @@ android {
 
 shrinkerConfig {
     enableShrink = true
+    shrinkBuildType = [
+            "debug"
+    ]
 }
 
 
@@ -55,6 +63,7 @@ dependencies {
 }
 
 apply plugin: 'com.getkeepsafe.dexcount'
+
 dexcount {
     verbose = false
     includeFieldCount = true

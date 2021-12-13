@@ -25,7 +25,8 @@ import org.objectweb.asm.ClassReader.SKIP_DEBUG
 import org.objectweb.asm.ClassReader.SKIP_FRAMES
 
 /**
- * @author yrom
+ *
+ *
  */
 class RSymbols() {
 
@@ -38,6 +39,26 @@ class RSymbols() {
 
         /**
          * 从inputs中解析出所有的R$xxx类
+         *
+         * R文件包含的内容如下：
+         * class R {
+         *  public static final class styleable {
+         *      public static final int[] FontFamily = new int[]{2130968969, 2130968970, 2130968971, 2130968972, 2130968973, 2130968974};
+         *      public static final int FontFamily_fontProviderAuthority = 0;
+         *      public static final int fontfamily_fontprovidercerts = 1;
+         *      ...
+         *  }
+         *  public static final class style {}
+         *  public static final class string {}
+         * }
+         *
+         * 除了styleable类包含数组类型的值以外，其他的类只包含整数值。
+         *
+         * 这个方法收集所有的R符号，保存在字典中
+         *
+         * key值为类名+字典名，值为对应的常量值
+         *
+         *
          */
         fun collectAllRFiles(inputs: Collection<TransformInput>): RSymbols {
             val symbols = RSymbols()
@@ -62,8 +83,6 @@ class RSymbols() {
 
             val stream: Stream<Path>
             if (paths.size >= Runtime.getRuntime().availableProcessors() * 3) {
-                // use parallel here!
-
                 stream = paths.parallelStream()
                 symbols.symbols = Maps.newConcurrentMap()
             } else {
@@ -71,22 +90,30 @@ class RSymbols() {
                 symbols.symbols = Maps.newHashMap()
             }
 
-            // 找到所有R相关的类
+            // 找到所有R$xxxx.class类
             val rClassMatcher = FileSystems.getDefault().getPathMatcher("glob:R$*.class")
             stream.filter {
                 rClassMatcher.matches(it.fileName)
-            } .forEach {
+            }.forEach {
+
+
                 drainRSymbolsFromRFile(it, symbols)
             }
 
             return symbols
         }
 
-
+        /**
+         * 解析class，获取R子类的符号名
+         */
         private fun drainRSymbolsFromRFile(file: Path, symbols: RSymbols) {
 
             val filename = file.fileName.toString()
+
+            // 类名
             val typeName = filename.substring(0, filename.length - ".class".length)
+
+            // 读取字节码内容
             val bytes: ByteArray
 
             try {
@@ -98,7 +125,12 @@ class RSymbols() {
 
             val visitor = object : ClassVisitor(Opcodes.ASM5) {
 
-                // 收集非R$.styleables的R$xxx类
+                /**
+                 * 收集非R$.styleables的R$xxx类
+                 *
+                 * 遍历类的字段
+                 *
+                 */
                 override fun visitField(access: Int, name: String?, desc: String?, signature: String?, value: Any?): FieldVisitor? {
                     // read constant value
                     if (value !is Int) return null // 如果不是int值，比表示
@@ -118,6 +150,12 @@ class RSymbols() {
 
                 override fun visitMethod(access: Int, name: String?, desc: String?, signature: String?, exceptions: Array<String>?): MethodVisitor? {
 
+                    //
+                    // 解析
+                    // public static final class styleable {
+                    //      public static final int[] FontFamily = new int[]{2130968969, 2130968970, 2130968971, 2130968972, 2130968973, 2130968974};
+                    //      ...
+                    // }
                     return if (access == Opcodes.ACC_STATIC && "<clinit>" == name) {
 
                         // public static final int[] a = new int[] {100, 200, 300}
@@ -137,36 +175,37 @@ class RSymbols() {
 //        PUTSTATIC com/example/testacm/TestA.a : [I //把数组赋值给类TestA的静态域a
 
 
+                        // 返回一个方法访问器
                         object : MethodVisitor(Opcodes.ASM5) {
 
-                            var current: IntArray? = null
-                            var intStack = LinkedList<Int>()
+                            var current: IntArray? = null // 要收集的数组
+                            var intStack = LinkedList<Int>() // 模拟操作数栈
 
                             override fun visitIntInsn(opcode: Int, operand: Int) {
-                                if (opcode == Opcodes.NEWARRAY && operand == Opcodes.T_INT) {
+                                if (opcode == Opcodes.NEWARRAY && operand == Opcodes.T_INT) { // NEWARRAY指令，根据栈定创建指定大小的数组
                                     current = IntArray(intStack.pop())
-                                } else if (opcode == Opcodes.BIPUSH) {
+                                } else if (opcode == Opcodes.BIPUSH || opcode == Opcodes.SIPUSH) { // 模拟入栈操作
                                     intStack.push(operand)
                                 }
                             }
 
-                            override fun visitLdcInsn(cst: Any) {
+                            override fun visitLdcInsn(cst: Any) {// 模拟入栈操作
                                 if (cst is Int) {
                                     intStack.push(cst)
                                 }
                             }
 
                             override fun visitInsn(opcode: Int) {
-                                if (opcode >= Opcodes.ICONST_0 && opcode <= Opcodes.ICONST_5) {
+                                if (opcode >= Opcodes.ICONST_0 && opcode <= Opcodes.ICONST_5) { // 模拟入栈操作
                                     intStack.push(opcode - Opcodes.ICONST_0)
-                                } else if (opcode == Opcodes.IASTORE) {
+                                } else if (opcode == Opcodes.IASTORE) { // IASTORE从模拟栈中读取指定的值
                                     val value = intStack.pop()
                                     val index = intStack.pop()
                                     current?.set(index, value)
                                 }
                             }
 
-                            override fun visitFieldInsn(opcode: Int, owner: String, name: String, desc: String) {
+                            override fun visitFieldInsn(opcode: Int, owner: String, name: String, desc: String) { // 数组创建完毕
                                 if (opcode == Opcodes.PUTSTATIC) {
                                     val old = symbols.styleables[name]
                                     if (old != null && old.size != current!!.size && !Arrays.equals(old, current)) {
